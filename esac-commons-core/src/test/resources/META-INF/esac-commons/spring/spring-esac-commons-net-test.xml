@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = INET ADDRESSES
+    =====================================================================================================-->
+    <beans:bean id="inetAddrLoopback" class="java.net.InetAddress" factory-method="getLoopbackAddress"/>
+    
+    <!--====================================================================================================
+    = SERVERS
+    =====================================================================================================-->
+    <beans:bean id="server" class="com.esacinc.commons.test.beans.EsacServer" abstract="true"
+        p:hostAddress-ref="inetAddrLoopback"/>
+    
+    <!--====================================================================================================
+    = CHANNEL SERVERS
+    =====================================================================================================-->
+    <beans:bean id="channelServer" class="com.esacinc.commons.test.beans.EsacChannelServer" parent="server" abstract="true"
+        p:backlog="${esac-commons.net.channel.server.socket.backlog}"/>
+    
+    <!--====================================================================================================
+    = HTTP SERVERS
+    =====================================================================================================-->
+    <beans:bean id="httpServer" class="com.esacinc.commons.test.beans.EsacHttpServer" parent="channelServer" abstract="true"
+        p:maxContentLength="${esac-commons.net.http.server.content.len.max}"/>
+    
+    <!--====================================================================================================
+    = HTTP CLIENT FACTORIES
+    =====================================================================================================-->
+    <beans:bean id="httpClientReqFactory" class="com.esacinc.commons.net.http.client.EsacHttpClientRequestFactory" abstract="true"/>
+    
+    <!--====================================================================================================
+    = REST TEMPLATES
+    =====================================================================================================-->
+    <beans:bean id="restTemplate" class="com.esacinc.commons.net.http.client.impl.EsacRestTemplate" abstract="true">
+        <beans:property name="messageConverters">
+            <beans:list>
+                <beans:bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter"/>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+</beans:beans>

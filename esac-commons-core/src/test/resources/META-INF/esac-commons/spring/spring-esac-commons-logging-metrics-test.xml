@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = TASK EXECUTORS
+    =====================================================================================================-->
+    <beans:bean id="taskExecServiceLoggingMetricsDataSrc" parent="taskExecServiceThreadPool"
+        p:threadNamePrefix="#{ threadGroup.name }-logging-metrics-data-src-"/>
+    
+    <beans:bean id="taskExecServiceLoggingMetricsSnapshot" parent="taskExecServiceThreadPool"
+        p:threadNamePrefix="#{ threadGroup.name }-logging-metrics-snapshot-"/>
+    
+    <!--====================================================================================================
+    = TASK SCHEDULERS
+    =====================================================================================================-->
+    <beans:bean id="taskSchedulerServiceLoggingMetricsReporter" parent="taskSchedulerServiceThreadPool"
+        p:threadNamePrefix="#{ threadGroup.name }-logging-metrics-reporter-"/>
+    
+    <!--====================================================================================================
+    = METRIC REGISTRIES
+    =====================================================================================================-->
+    <beans:bean id="metricRegistry" class="com.esacinc.commons.logging.metrics.impl.EsacMetricRegistry"
+        p:dataSourceTaskExecutorService-ref="taskExecServiceLoggingMetricsDataSrc"
+        p:snapshotTaskExecutorService-ref="taskExecServiceLoggingMetricsSnapshot"/>
+    
+    <!--====================================================================================================
+    = REPORTERS
+    =====================================================================================================-->
+    <beans:bean id="reporterLogstash" class="com.esacinc.commons.logging.metrics.impl.LogstashReporter"
+        p:period="${esac-commons.logging.metrics.reporter.logstash.period}"
+        p:taskSchedulerService-ref="taskSchedulerServiceLoggingMetricsReporter"/>
+</beans:beans>

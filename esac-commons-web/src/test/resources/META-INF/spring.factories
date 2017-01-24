@@ -1,0 +1,2 @@
+org.springframework.boot.SpringApplicationRunListener=\
+    com.esacinc.commons.web.test.context.impl.EsacCommonsWebApplicationRunListener

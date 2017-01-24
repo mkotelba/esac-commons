@@ -13,4 +13,54 @@
         <ignoreVersion type="regex">.*[\-\._](?i:alpha|beta).*</ignoreVersion>
         <ignoreVersion type="regex">.*[\-\._](?i:(?:b|cr|m|rc)\d+).*</ignoreVersion>
     </ignoreVersions>
+    
+    <rules>
+        <!--====================================================================================================
+        = JAXB
+        =====================================================================================================-->
+        <rule groupId="com.sun.xml.bind" artifactId="jaxb-xjc">
+            <ignoreVersions>
+                <ignoreVersion type="exact">2.2.11</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        
+        <!--====================================================================================================
+        = JCACHE (JSR 107)
+        =====================================================================================================-->
+        <rule groupId="javax.cache" artifactId="cache-api">
+            <ignoreVersions>
+                <ignoreVersion type="exact">1.0.0-PFD</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        
+        <!--====================================================================================================
+        = APACHE HTTP COMPONENTS
+        =====================================================================================================-->
+        <!--
+        Do not upgrade past v4.4.4 due to required annotations (by SoapUI).
+        -->
+        <rule groupId="org.apache.httpcomponents" artifactId="httpcore">
+            <ignoreVersions>
+                <ignoreVersion type="regex">.+</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        
+        <rule groupId="org.apache.httpcomponents" artifactId="httpcore-nio">
+            <ignoreVersions>
+                <ignoreVersion type="regex">.+</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+        
+        <!--====================================================================================================
+        = JAXB2 COMMONS
+        =====================================================================================================-->
+        <!--
+        Do not upgrade to v1.11.1 due to it's apparent accidental publication.
+        -->
+        <rule groupId="org.jvnet.jaxb2_commons" artifactId="jaxb2-basics-runtime">
+            <ignoreVersions>
+                <ignoreVersion type="regex">1\.11\.1(?:\-PUBLISHED\-BY\-MISTAKE)?</ignoreVersion>
+            </ignoreVersions>
+        </rule>
+    </rules>
 </ruleset>

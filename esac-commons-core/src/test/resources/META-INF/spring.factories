@@ -1,0 +1,14 @@
+com.esacinc.commons.logging.EsacLoggingEventHandler=\
+    com.esacinc.commons.management.logging.impl.GcLoggingEventHandlerImpl,\
+    com.esacinc.commons.net.http.logging.impl.HttpRequestLoggingEventHandlerImpl,\
+    com.esacinc.commons.net.http.logging.impl.HttpResponseLoggingEventHandlerImpl
+
+org.springframework.boot.SpringApplicationRunListener=\
+    com.esacinc.commons.test.context.impl.EsacCommonsBindingApplicationRunListener,\
+    com.esacinc.commons.test.logging.impl.EsacCommonsLoggingApplicationRunListener
+
+org.springframework.boot.diagnostics.FailureAnalysisReporter=\
+    com.esacinc.commons.context.impl.EsacApplicationFailureAnalysisReporter
+
+org.springframework.context.ApplicationListener=\
+    ch.qos.logback.ext.spring.ApplicationContextHolder

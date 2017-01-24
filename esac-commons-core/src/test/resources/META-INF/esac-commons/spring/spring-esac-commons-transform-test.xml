@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = RESOURCE SOURCE RESOLVERS
+    =====================================================================================================-->
+    <beans:bean id="resourceSrcResolver" class="com.esacinc.commons.transform.impl.ResourceSourceResolverImpl"/>
+    
+    <!--====================================================================================================
+    = SAXON CONFIGURATIONS
+    =====================================================================================================-->
+    <beans:bean id="saxonConfig" class="com.esacinc.commons.transform.saxon.impl.EsacSaxonConfiguration"
+        p:lineNumbering="true"
+        p:recoveryPolicy="#{ T(net.sf.saxon.Configuration).DO_NOT_RECOVER }"
+        p:stripsAllWhiteSpace="false"
+        p:stripsWhiteSpace="#{ T(net.sf.saxon.value.Whitespace).NONE }"
+        p:treeModel="#{ T(net.sf.saxon.event.Builder).LINKED_TREE }"
+        p:xsltVersion="2.0">
+        <beans:property name="configurationProperties">
+            <beans:map>
+                <beans:entry key="#{ T(net.sf.saxon.lib.FeatureKeys).GENERATE_BYTE_CODE }" value="true" value-type="java.lang.Boolean"/>
+                <beans:entry key="#{ T(net.sf.saxon.lib.FeatureKeys).MARK_DEFAULTED_ATTRIBUTES }" value="true" value-type="java.lang.Boolean"/>
+            </beans:map>
+        </beans:property>
+        <beans:property name="defaultSerializationProperties">
+            <beans:map>
+                <beans:entry key="#{ T(javax.xml.transform.OutputKeys).ENCODING }" value="#{ T(com.esacinc.commons.io.EsacCharsets).UTF_8_NAME }"/>
+                <beans:entry key="#{ T(javax.xml.transform.OutputKeys).STANDALONE }" value="#{ T(com.esacinc.commons.config.EsacOptionValues).YES }"/>
+            </beans:map>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = PROCESSORS
+    =====================================================================================================-->
+    <beans:bean id="saxonProcessor" class="com.esacinc.commons.transform.saxon.impl.EsacSaxonProcessor"
+        c:config-ref="saxonConfig"/>
+</beans:beans>

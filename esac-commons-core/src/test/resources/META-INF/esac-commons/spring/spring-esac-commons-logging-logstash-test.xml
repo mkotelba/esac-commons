@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = OBJECT MAPPERS
+    =====================================================================================================-->
+    <beans:bean id="objMapperLogstash" parent="objMapper">
+        <beans:property name="config">
+            <beans:bean parent="objMapperConfigLogging">
+                <beans:property name="features">
+                    <beans:map merge="true">
+                        <beans:entry key="#{ T(com.fasterxml.jackson.core.JsonGenerator.Feature).FLUSH_PASSED_TO_STREAM }" value="false"/>
+                    </beans:map>
+                </beans:property>
+                <beans:property name="modules">
+                    <beans:array merge="true">
+                        <beans:bean parent="moduleLogging">
+                            <beans:property name="serializers">
+                                <beans:array merge="true">
+                                    <beans:bean class="com.esacinc.commons.net.http.json.impl.HttpParameterMultimapJsonSerializer"/>
+                                </beans:array>
+                            </beans:property>
+                        </beans:bean>
+                    </beans:array>
+                </beans:property>
+            </beans:bean>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = JSON PROVIDERS
+    =====================================================================================================-->
+    <beans:bean id="jsonProvCallerData" class="com.esacinc.commons.logging.logstash.impl.EsacCallerDataJsonProvider"/>
+    
+    <beans:bean id="jsonProvLogLevel" class="com.esacinc.commons.logging.logstash.impl.EsacLogLevelJsonProvider"/>
+    
+    <beans:bean id="jsonProvLogger" class="com.esacinc.commons.logging.logstash.impl.LoggerJsonProvider"/>
+    
+    <beans:bean id="jsonProvMarkerFields" class="com.esacinc.commons.logging.logstash.impl.FieldsMarkerJsonProvider"/>
+    
+    <beans:bean id="jsonProvMarkerMsg" class="com.esacinc.commons.logging.logstash.impl.MessageMarkerJsonProvider"/>
+    
+    <beans:bean id="jsonProvMdc" class="com.esacinc.commons.logging.logstash.impl.EsacMdcJsonProvider"/>
+    
+    <beans:bean id="jsonProvStackTrace" class="com.esacinc.commons.logging.logstash.impl.EsacStackTraceJsonProvider"/>
+    
+    <beans:bean id="jsonProvTags" class="com.esacinc.commons.logging.logstash.impl.EsacTagsJsonProvider"/>
+    
+    <beans:bean id="jsonProvThread" class="com.esacinc.commons.logging.logstash.impl.ThreadJsonProvider"/>
+    
+    <beans:bean id="jsonProvTimestamp" class="com.esacinc.commons.logging.logstash.impl.TimestampJsonProvider"/>
+    
+    <beans:bean id="jsonProvVersion" class="com.esacinc.commons.logging.logstash.impl.VersionJsonProvider"/>
+    
+    <!--====================================================================================================
+    = ENCODERS
+    =====================================================================================================-->
+    <beans:bean id="encoderJsonLogstash" class="com.esacinc.commons.logging.logstash.impl.EsacLogstashJsonEncoder"
+        p:encoding="#{ T(java.nio.charset.StandardCharsets).UTF_8.name() }"
+        p:lineSeparator="#{ T(org.apache.commons.lang3.StringUtils).LF }"
+        p:objectMapper-ref="objMapperLogstash">
+        <beans:property name="providerItems">
+            <beans:array>
+                <beans:ref bean="jsonProvCallerData"/>
+                <beans:ref bean="jsonProvLogLevel"/>
+                <beans:ref bean="jsonProvLogger"/>
+                <beans:ref bean="jsonProvMarkerFields"/>
+                <beans:ref bean="jsonProvMarkerMsg"/>
+                <beans:ref bean="jsonProvMdc"/>
+                <beans:ref bean="jsonProvStackTrace"/>
+                <beans:ref bean="jsonProvTags"/>
+                <beans:ref bean="jsonProvThread"/>
+                <beans:ref bean="jsonProvTimestamp"/>
+                <beans:ref bean="jsonProvVersion"/>
+            </beans:array>
+        </beans:property>
+    </beans:bean>
+</beans:beans>

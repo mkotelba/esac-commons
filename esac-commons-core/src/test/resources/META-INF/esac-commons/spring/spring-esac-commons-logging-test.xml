@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = BEAN POST PROCESSORS
+    =====================================================================================================-->
+    <beans:bean id="beanPostProcLoggerContextAware" class="com.esacinc.commons.logging.logback.impl.LoggerContextAwareBeanPostProcessor"/>
+    
+    <!--====================================================================================================
+    = CONVERTERS
+    =====================================================================================================-->
+    <beans:bean id="patternConvThrowableProxyRootCause" class="com.esacinc.commons.logging.logback.impl.RootCauseThrowableProxyConverter"/>
+    
+    <!--====================================================================================================
+    = MODULES
+    =====================================================================================================-->
+    <beans:bean id="moduleLogging" parent="module" abstract="true"
+        p:namingStrategy-ref="propNamingStrategyElasticsearch"/>
+    
+    <!--====================================================================================================
+    = OBJECT MAPPER CONFIGS
+    =====================================================================================================-->
+    <beans:bean id="objMapperConfigLogging" parent="objMapperConfig" abstract="true">
+        <beans:property name="features">
+            <beans:map>
+                <beans:entry key="#{ T(com.fasterxml.jackson.core.JsonGenerator.Feature).ESCAPE_NON_ASCII }" value="true"/>
+                <beans:entry key="#{ T(com.fasterxml.jackson.databind.MapperFeature).ALLOW_EXPLICIT_PROPERTY_RENAMING }" value="true"/>
+            </beans:map>
+        </beans:property>
+    </beans:bean>
+</beans:beans>

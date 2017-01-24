@@ -1,0 +1,2 @@
+#com.esacinc.commons.logging.EsacLoggingEventHandler=\
+#    com.esacinc.commons.ws.logging.impl.WsLoggingEventHandlerImpl

@@ -1,0 +1,3 @@
+com.esacinc.commons.logging.EsacLoggingEventHandler=\
+    com.esacinc.commons.crypto.ssl.logging.impl.SslHelloLoggingEventHandlerImpl,\
+    com.esacinc.commons.crypto.ssl.logging.impl.SslTrustLoggingEventHandlerImpl

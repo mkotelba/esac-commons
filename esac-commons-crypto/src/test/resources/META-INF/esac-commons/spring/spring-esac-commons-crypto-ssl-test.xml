@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = THREAD FACTORIES
+    =====================================================================================================-->
+    <beans:bean id="threadFactoryCryptoOcspServerShutdown" parent="threadFactory"
+        p:threadNamePrefix="#{ threadGroup.name }-crypto-ssl-ocsp-server-shutdown-"/>
+    
+    <!--====================================================================================================
+    = TASK EXECUTOR SERVICES
+    =====================================================================================================-->
+    <beans:bean id="taskExecServiceCryptoOcspServer" parent="taskExecServiceThreadPool"
+        p:corePoolSize="${esac-commons.crypto.ocsp.server.task.exec.pool.size.core}"
+        p:maxPoolSize="${esac-commons.crypto.ocsp.server.task.exec.pool.size.max}"
+        p:threadNamePrefix="#{ threadGroup.name }-crypto-ssl-ocsp-server-"/>
+    
+    <beans:bean id="taskExecServiceCryptoOcspServerReq" parent="taskExecServiceThreadPoolDynamic"
+        p:keepAliveSeconds="${esac-commons.crypto.ocsp.server.req.task.exec.keep.alive.timeout}"
+        p:maxPoolSize="${esac-commons.crypto.ocsp.server.req.task.exec.pool.size.max}"
+        p:threadNamePrefix="#{ threadGroup.name }-crypto-ssl-ocsp-server-req-"/>
+    
+    <!--====================================================================================================
+    = LOGGING EVENT PROCESSORS
+    =====================================================================================================-->
+    <beans:bean id="eventLoggingSslProcHello" class="com.esacinc.commons.crypto.ssl.logging.impl.SslHelloLoggingEventProcessorImpl"/>
+    
+    <!--====================================================================================================
+    = SSL DEBUG PRINT STREAMS
+    =====================================================================================================-->
+    <beans:bean id="sslDebugPrintStream" class="com.esacinc.commons.crypto.ssl.logging.impl.SslDebugPrintStream" abstract="true">
+        <beans:property name="eventProcessors">
+            <beans:set>
+                <beans:ref bean="eventLoggingSslProcHello"/>
+            </beans:set>
+        </beans:property>
+    </beans:bean>
+    
+    <beans:bean id="sslDebugPrintStreamOut" parent="sslDebugPrintStream"
+        c:type="#{ T(com.esacinc.commons.crypto.ssl.logging.SslDebugPrintStreamType).OUT }"/>
+    
+    <beans:bean id="sslDebugPrintStreamErr" parent="sslDebugPrintStream"
+        c:type="#{ T(com.esacinc.commons.crypto.ssl.logging.SslDebugPrintStreamType).ERR }"/>
+    
+    <!--====================================================================================================
+    = KEY MANAGERS
+    =====================================================================================================-->
+    <beans:bean id="keyManager" class="com.esacinc.commons.crypto.ssl.impl.EsacKeyManager" abstract="true">
+        <beans:constructor-arg name="algName" value="#{ T(com.esacinc.commons.crypto.ssl.KeyManagerAlgorithms).NEW_SUN_X509_NAME }"/>
+        <beans:constructor-arg name="prov" value="#{ T(com.esacinc.commons.crypto.CryptoProviders).SUN_JSSE }"/>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = CONSTRAINTS CHECKERS
+    =====================================================================================================-->
+    <!--suppress SpringBeanConstructorArgInspection -->
+    <beans:bean id="constraintsChecker" class="com.esacinc.commons.crypto.ssl.constraints.impl.EsacConstraintsChecker"
+        lazy-init="true" scope="prototype">
+        <beans:property name="keyAlgorithms">
+            <beans:map>
+                <beans:entry key="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).DH_NAME }"
+                    value="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).DH_ID }"/>
+                <beans:entry key="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).DSA_NAME }"
+                    value="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).DSA_ID }"/>
+                <beans:entry key="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).EC_NAME }"
+                    value="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).EC_ID }"/>
+                <beans:entry key="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).RSA_NAME }"
+                    value="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).RSA_ID }"/>
+            </beans:map>
+        </beans:property>
+        <beans:property name="minimumKeyAlgorithmSizes">
+            <beans:map>
+                <beans:entry key="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).RSA_NAME }" value="${esac-commons.crypto.constraints.key.rsa.size.min}"/>
+            </beans:map>
+        </beans:property>
+        <beans:property name="signatureAlgorithmIds">
+            <beans:set>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_512_WITH_RSA_ENCRYPTION_ID }</beans:value>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_384_WITH_RSA_ENCRYPTION_ID }</beans:value>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_256_WITH_RSA_ENCRYPTION_ID }</beans:value>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_1_WITH_RSA_ENCRYPTION_ID }</beans:value>
+            </beans:set>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = REVOCATION CHECKERS
+    =====================================================================================================-->
+    <!--suppress SpringBeanConstructorArgInspection -->
+    <beans:bean id="revocationChecker" class="com.esacinc.commons.crypto.ssl.revocation.impl.EsacRevocationChecker"
+        lazy-init="true" scope="prototype"
+        p:connectTimeout="${esac-commons.crypto.ocsp.conn.timeout}"
+        p:digestAlgorithmId="#{ T(com.esacinc.commons.crypto.digest.DigestAlgorithms).SHA_256_ID }"
+        p:nonceOptional="true"
+        p:nonceSize="${esac-commons.crypto.ocsp.nonce.size}"
+        p:readTimeout="${esac-commons.crypto.ocsp.read.timeout}"
+        p:secureRandom-ref="secureRandomSha1">
+        <beans:property name="preferredSignatureAlgorithmIds">
+            <beans:list>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_512_WITH_RSA_ENCRYPTION_ID }</beans:value>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_384_WITH_RSA_ENCRYPTION_ID }</beans:value>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_256_WITH_RSA_ENCRYPTION_ID }</beans:value>
+                <beans:value>#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_1_WITH_RSA_ENCRYPTION_ID }</beans:value>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+    
+    <!--suppress SpringBeanConstructorArgInspection -->
+    <beans:bean id="revocationCheckerOptional" parent="revocationChecker" lazy-init="true" scope="prototype"
+        p:optional="true"/>
+    
+    <!--====================================================================================================
+    = TRUST MANAGERS
+    =====================================================================================================-->
+    <beans:bean id="trustManager" class="com.esacinc.commons.crypto.ssl.impl.EsacTrustManager" abstract="true">
+        <beans:constructor-arg name="algName" value="#{ T(com.esacinc.commons.crypto.ssl.TrustManagerAlgorithms).PKIX_NAME }"/>
+        <beans:constructor-arg name="prov" value="#{ T(com.esacinc.commons.crypto.CryptoProviders).BC }"/>
+        <beans:property name="constraintsCheckerBeanName">
+            <beans:idref bean="constraintsChecker"/>
+        </beans:property>
+        <beans:property name="revocationCheckerBeanName">
+            <beans:idref bean="revocationChecker"/>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = SSL PARAMETERS
+    =====================================================================================================-->
+    <beans:bean id="sslParams" class="javax.net.ssl.SSLParameters" abstract="true"
+        p:cipherSuites="${esac-commons.crypto.ssl.cipher.suites}"
+        p:useCipherSuitesOrder="true">
+        <beans:property name="algorithmConstraints">
+            <beans:bean class="com.esacinc.commons.crypto.ssl.constraints.impl.PermitAllConstraints"/>
+        </beans:property>
+        <beans:property name="protocols">
+            <beans:array>
+                <beans:value>#{ T(com.esacinc.commons.crypto.ssl.SslVersion).TLS_12.algorithmName }</beans:value>
+            </beans:array>
+        </beans:property>
+    </beans:bean>
+    
+    <beans:bean id="sslParamsClient" parent="sslParams" abstract="true"/>
+    
+    <beans:bean id="sslParamsServer" parent="sslParams" abstract="true"
+        p:needClientAuth="true"/>
+    
+    <!--====================================================================================================
+    = SSL CONTEXTS
+    =====================================================================================================-->
+    <beans:bean id="sslContext" class="com.esacinc.commons.crypto.ssl.impl.EsacSslContextFactoryBean" abstract="true"
+        p:algorithmName="#{ T(com.esacinc.commons.crypto.ssl.SslVersion).TLS_12.algorithmName }"
+        p:provider="#{ T(com.esacinc.commons.crypto.CryptoProviders).SUN_JSSE }"
+        p:secureRandom-ref="secureRandomSha1"/>
+    
+    <!--====================================================================================================
+    = OCSP SERVERS
+    =====================================================================================================-->
+    <beans:bean id="ocspServer" class="com.esacinc.commons.test.crypto.ssl.revocation.impl.OcspServerImpl" parent="httpServer"
+        p:port="${esac-commons.crypto.ocsp.server.port.http}"
+        p:requestTaskExecutorService-ref="taskExecServiceCryptoOcspServerReq"
+        p:secureRandom-ref="secureRandomSha1"
+        p:shutdownThreadFactory-ref="threadFactoryCryptoOcspServerShutdown"
+        p:signatureAlgorithmId="#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_512_WITH_RSA_ENCRYPTION_ID }"
+        p:taskExecutorService-ref="taskExecServiceCryptoOcspServer"/>
+</beans:beans>

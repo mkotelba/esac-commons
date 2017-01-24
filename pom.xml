@@ -1,7 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project
     xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="
+        http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     
     <modelVersion>4.0.0</modelVersion>
     
@@ -18,13 +20,24 @@
     <description>ESAC Commons aggregate Maven project.</description>
     
     <properties>
-        <!-- Project properties -->
-        <project.basedir.all>${project.basedir}</project.basedir.all>
+        <!--====================================================================================================
+        = PROJECT ALL PROPERTIES
+        =====================================================================================================-->
+        <project.all.basedir>${project.basedir}</project.all.basedir>
+        <project.all.baseUri>${project.baseUri}</project.all.baseUri>
     </properties>
     
     <modules>
+        <module>esac-commons-bom</module>
         <module>esac-commons-parent</module>
         <module>esac-commons-core</module>
+        <module>esac-commons-build</module>
+        <module>esac-commons-build-buildhelper-maven-plugin</module>
+        <module>esac-commons-crypto</module>
+        <module>esac-commons-data</module>
+        <module>esac-commons-web</module>
+        <module>esac-commons-ws</module>
+        <module>esac-commons-test</module>
     </modules>
     
     <build>
@@ -35,7 +48,73 @@
                 <inherited>false</inherited>
                 <executions>
                     <execution>
-                        <id>enforce-java-version</id>
+                        <id>enforce-versions</id>
+                        <phase>none</phase>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>jar-sources</id>
+                        <phase>none</phase>
+                        <inherited>false</inherited>
+                    </execution>
+                    <execution>
+                        <id>test-jar-sources</id>
+                        <phase>none</phase>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>parse-version</id>
+                        <phase>none</phase>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.kuali.maven.plugins</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>translate-properties</id>
+                        <phase>none</phase>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <phase>none</phase>
+                        <inherited>false</inherited>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>revision</id>
+                        <phase>none</phase>
                         <inherited>false</inherited>
                     </execution>
                 </executions>

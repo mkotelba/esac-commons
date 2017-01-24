@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = TRANSACTION ID GENERATORS
+    =====================================================================================================-->
+    <beans:bean id="txIdGen" class="com.esacinc.commons.tx.impl.TxIdGenerator" abstract="true"/>
+    
+    <!--====================================================================================================
+    = TASK EXECUTORS
+    =====================================================================================================-->
+    <beans:bean id="taskExecTx" class="com.esacinc.commons.tx.impl.TxTaskExecutor" parent="threadFactory" abstract="true"/>
+</beans:beans>

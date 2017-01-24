@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = MODULES
+    =====================================================================================================-->
+    <beans:bean id="module" class="com.esacinc.commons.json.impl.EsacModule" abstract="true"/>
+    
+    <!--====================================================================================================
+    = OBJECT MAPPER CONFIGS
+    =====================================================================================================-->
+    <beans:bean id="objMapperConfig" class="com.esacinc.commons.json.impl.ObjectMapperConfigImpl" abstract="true">
+        <beans:property name="modules">
+            <beans:array>
+                <beans:bean class="com.fasterxml.jackson.datatype.jdk8.Jdk8Module"/>
+                <beans:bean class="com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule"
+                    p:nonNillableInclusion="NON_DEFAULT"
+                    p:priority="SECONDARY"/>
+                <beans:bean parent="module">
+                    <beans:property name="serializers">
+                        <beans:array>
+                            <beans:bean class="com.esacinc.commons.config.property.json.impl.PropertyTrieJsonSerializer"/>
+                        </beans:array>
+                    </beans:property>
+                </beans:bean>
+            </beans:array>
+        </beans:property>
+        <beans:property name="prettyPrinter">
+            <beans:bean class="com.esacinc.commons.json.impl.EsacPrettyPrinter"
+                c:indentSize="${esac-commons.transform.content.pretty.indent.size}"/>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = OBJECT MAPPERS
+    =====================================================================================================-->
+    <beans:bean id="objMapper" class="com.esacinc.commons.json.impl.ObjectMapperFactoryBean" abstract="true"/>
+</beans:beans>

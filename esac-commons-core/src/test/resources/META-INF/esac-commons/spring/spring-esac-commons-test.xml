@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+    
+    <!--====================================================================================================
+    = CONTEXT
+    =====================================================================================================-->
+    <context:component-scan base-package="com.esacinc.commons">
+        <context:exclude-filter expression="org.springframework.boot.context.TypeExcludeFilter" type="custom"/>
+        <context:exclude-filter expression="com.esacinc.commons.context.EsacApplicationConfiguration" type="annotation"/>
+    </context:component-scan>
+    
+    <!--====================================================================================================
+    = PROPERTY SOURCES PLACEHOLDER CONFIGURERS
+    =====================================================================================================-->
+    <beans:bean id="propSourcesPlaceholderConfigurer" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"
+        p:fileEncoding="#{ T(com.esacinc.commons.io.EsacCharsets).UTF_8_NAME }"/>
+    
+    <!--====================================================================================================
+    = MESSAGE SOURCES
+    =====================================================================================================-->
+    <beans:bean id="messageSource" class="com.esacinc.commons.context.impl.PropertyResolvingMessageSource" primary="true"
+        c:propResolver-ref="environment"/>
+    
+    <!--====================================================================================================
+    = CONVERSION SERVICES
+    =====================================================================================================-->
+    <beans:bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean" primary="true">
+        <beans:property name="converters">
+            <beans:set>
+                <beans:bean class="com.esacinc.commons.net.convert.impl.InetAddressConverter"/>
+                <beans:bean class="com.esacinc.commons.net.convert.impl.UriConverter"/>
+                <beans:bean class="com.esacinc.commons.transform.convert.impl.ResourceSourceConverter"/>
+                <beans:bean class="com.esacinc.commons.xml.saxon.convert.impl.EsacDocumentUriConverter"/>
+                <beans:bean class="com.esacinc.commons.xml.saxon.convert.impl.XdmValueConverter"/>
+                <beans:bean class="org.springframework.boot.bind.StringToCharArrayConverter"/>
+            </beans:set>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = VALIDATORS
+    =====================================================================================================-->
+    <beans:bean id="validator" class="com.esacinc.commons.validation.impl.EsacValidatorFactoryBean" primary="true">
+        <beans:property name="messageInterpolator">
+            <beans:bean class="org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator">
+                <beans:constructor-arg name="userResourceBundleLocator">
+                    <beans:bean class="org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator"
+                        c:messageSource-ref="messageSource"/>
+                </beans:constructor-arg>
+            </beans:bean>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = THREAD GROUPS
+    =====================================================================================================-->
+    <beans:bean id="threadGroup" class="java.lang.ThreadGroup">
+        <beans:constructor-arg index="0" type="java.lang.String" value="esac-commons"/>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = THREAD FACTORIES
+    =====================================================================================================-->
+    <beans:bean id="threadFactory" class="org.springframework.scheduling.concurrent.CustomizableThreadFactory" abstract="true"
+        p:threadGroup-ref="threadGroup"/>
+    
+    <!--====================================================================================================
+    = TASK EXECUTOR SERVICES
+    =====================================================================================================-->
+    <beans:bean id="taskExecServiceThreadPool" class="com.esacinc.commons.concurrent.impl.ThreadPoolTaskExecutorService" parent="threadFactory" abstract="true"
+        p:daemon="true"
+        p:queueCapacity="0"/>
+    
+    <beans:bean id="taskExecServiceThreadPoolDynamic" parent="taskExecServiceThreadPool" abstract="true"
+        p:allowCoreThreadTimeOut="true"
+        p:corePoolSize="0"/>
+    
+    <!--====================================================================================================
+    = TASK SCHEDULER SERVICES
+    =====================================================================================================-->
+    <beans:bean id="taskSchedulerServiceThreadPool" class="com.esacinc.commons.concurrent.impl.ThreadPoolTaskSchedulerService" parent="threadFactory"
+        abstract="true"
+        p:daemon="true"
+        p:removeOnCancelPolicy="true"/>
+</beans:beans>

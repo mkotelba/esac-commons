@@ -1,0 +1,11 @@
+def projectBuildScriptContext = context(pathRegexp: /[^\.]+\.groovy/)
+
+contributor(projectBuildScriptContext) {
+    property(name: "ant", type: "groovy.util.AntBuilder")
+    property(name: "log", type: "org.apache.maven.plugin.logging.Log")
+    property(name: "mojoExecution", type: "org.apache.maven.plugin.MojoExecution")
+    property(name: "pluginArtifacts", type: "java.util.List<org.apache.maven.artifact.Artifact>")
+    property(name: "project", type: "org.apache.maven.project.MavenProject")
+    property(name: "projectHelper", type: "org.apache.maven.project.MavenProjectHelper")
+    property(name: "session", type: "org.apache.maven.execution.MavenSession")
+}

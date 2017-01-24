@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = TASK EXECUTOR SERVICES
+    =====================================================================================================-->
+    <beans:bean id="taskExecServiceTomcatClientReq" parent="taskExecServiceThreadPoolDynamic"
+        p:keepAliveSeconds="${esac-commons.tomcat.client.req.task.exec.keep.alive.timeout}"
+        p:maxPoolSize="${esac-commons.tomcat.client.req.task.exec.pool.size.max}"
+        p:threadNamePrefix="#{ threadGroup.name }-tomcat-client-req-"/>
+    
+    <!--====================================================================================================
+    = TRANSACTION ID GENERATORS
+    =====================================================================================================-->
+    <beans:bean id="txIdGenHttpServer" parent="txIdGen"
+        c:name="http-server"/>
+    
+    <!--====================================================================================================
+    = CREDENTIALS
+    =====================================================================================================-->
+    <beans:bean id="credTomcatServer" parent="credLeaf"
+        c:id="${esac-commons.crypto.cred.tomcat.server.ssl.subject.cn}"
+        c:name="${esac-commons.crypto.cred.tomcat.server.ssl.subject.cn}">
+        <beans:constructor-arg name="config">
+            <beans:bean parent="configCred">
+                <beans:constructor-arg name="certDescriptor">
+                    <beans:bean parent="configCertLeaf">
+                        <beans:property name="subjectDn">
+                            <beans:bean parent="dn"
+                                p:commonName="${esac-commons.crypto.cred.tomcat.server.ssl.subject.cn}"/>
+                        </beans:property>
+                    </beans:bean>
+                </beans:constructor-arg>
+                <beans:constructor-arg name="keyPairDescriptor">
+                    <beans:bean parent="configKeyPair"/>
+                </beans:constructor-arg>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <beans:bean id="credTomcatClient" parent="credLeaf"
+        c:id="${esac-commons.crypto.cred.tomcat.client.ssl.subject.cn}"
+        c:name="${esac-commons.crypto.cred.tomcat.client.ssl.subject.cn}">
+        <beans:constructor-arg name="config">
+            <beans:bean parent="configCred">
+                <beans:constructor-arg name="certDescriptor">
+                    <beans:bean parent="configCertLeaf">
+                        <beans:property name="subjectDn">
+                            <beans:bean parent="dn"
+                                p:commonName="${esac-commons.crypto.cred.tomcat.client.ssl.subject.cn}"/>
+                        </beans:property>
+                    </beans:bean>
+                </beans:constructor-arg>
+                <beans:constructor-arg name="keyPairDescriptor">
+                    <beans:bean parent="configKeyPair"/>
+                </beans:constructor-arg>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = KEY STORES
+    =====================================================================================================-->
+    <beans:bean id="keyStoreKeyTomcatServer" parent="keyStore">
+        <beans:constructor-arg name="spi">
+            <beans:bean parent="keyStoreSpi"
+                c:pass="${esac-commons.crypto.store.key.tomcat.server.pass}"
+                c:resource="${esac-commons.crypto.store.key.tomcat.server.file}">
+                <beans:property name="entryConfigs">
+                    <beans:array>
+                        <beans:bean parent="configKeyStoreEntryPrivateKey"
+                            c:alias="${esac-commons.crypto.store.key.tomcat.server.entry.ssl.alias}"
+                            c:pass="${esac-commons.crypto.store.key.tomcat.server.entry.ssl.pass}"
+                            p:credential-ref="credTomcatServer"/>
+                    </beans:array>
+                </beans:property>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <beans:bean id="keyStoreTrustTomcatServer" parent="keyStore">
+        <beans:constructor-arg name="spi">
+            <beans:bean parent="keyStoreSpi"
+                c:pass="${esac-commons.crypto.store.trust.tomcat.server.pass}"
+                c:resource="${esac-commons.crypto.store.trust.tomcat.server.file}">
+                <beans:property name="entryConfigs">
+                    <beans:array>
+                        <beans:bean parent="configKeyStoreEntryTrustedCert"
+                            c:alias="${esac-commons.crypto.store.trust.tomcat.server.entry.ca.alias}"
+                            p:credential-ref="credCa"/>
+                    </beans:array>
+                </beans:property>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <beans:bean id="keyStoreKeyTomcatClient" parent="keyStore">
+        <beans:constructor-arg name="spi">
+            <beans:bean parent="keyStoreSpi"
+                c:pass="${esac-commons.crypto.store.key.tomcat.client.pass}"
+                c:resource="${esac-commons.crypto.store.key.tomcat.client.file}">
+                <beans:property name="entryConfigs">
+                    <beans:array>
+                        <beans:bean parent="configKeyStoreEntryPrivateKey"
+                            c:alias="${esac-commons.crypto.store.key.tomcat.client.entry.ssl.alias}"
+                            c:pass="${esac-commons.crypto.store.key.tomcat.client.entry.ssl.pass}"
+                            p:credential-ref="credTomcatClient"/>
+                    </beans:array>
+                </beans:property>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <beans:bean id="keyStoreTrustTomcatClient" parent="keyStore">
+        <beans:constructor-arg name="spi">
+            <beans:bean parent="keyStoreSpi"
+                c:pass="${esac-commons.crypto.store.trust.tomcat.client.pass}"
+                c:resource="${esac-commons.crypto.store.trust.tomcat.client.file}">
+                <beans:property name="entryConfigs">
+                    <beans:array>
+                        <beans:bean parent="configKeyStoreEntryTrustedCert"
+                            c:alias="${esac-commons.crypto.store.trust.tomcat.client.entry.ca.alias}"
+                            p:credential-ref="credCa"/>
+                    </beans:array>
+                </beans:property>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = KEY MANAGERS
+    =====================================================================================================-->
+    <beans:bean id="keyManagerTomcatServer" parent="keyManager"
+        c:keyStore-ref="keyStoreKeyTomcatServer"
+        c:pass="${esac-commons.crypto.store.key.tomcat.server.entry.ssl.pass}"/>
+    
+    <beans:bean id="keyManagerTomcatClient" parent="keyManager"
+        c:keyStore-ref="keyStoreKeyTomcatClient"
+        c:pass="${esac-commons.crypto.store.key.tomcat.client.entry.ssl.pass}"/>
+    
+    <!--====================================================================================================
+    = TRUST MANAGERS
+    =====================================================================================================-->
+    <beans:bean id="trustManagerTomcatServer" parent="trustManager"
+        c:keyStore-ref="keyStoreTrustTomcatServer"/>
+    
+    <beans:bean id="trustManagerTomcatClient" parent="trustManager"
+        c:keyStore-ref="keyStoreTrustTomcatClient"/>
+    
+    <!--====================================================================================================
+    = SSL PARAMETERS
+    =====================================================================================================-->
+    <beans:bean id="sslParamsServerTomcatServer" parent="sslParamsServer"/>
+    
+    <beans:bean id="sslParamsClientTomcatClient" parent="sslParamsClient"/>
+    
+    <!--====================================================================================================
+    = SSL CONTEXTS
+    =====================================================================================================-->
+    <beans:bean id="sslContextTomcatServer" parent="sslContext"
+        p:keyManagers-ref="keyManagerTomcatServer"
+        p:parameters-ref="sslParamsServerTomcatServer"
+        p:trustManagers-ref="trustManagerTomcatServer"/>
+    
+    <beans:bean id="sslContextTomcatClient" parent="sslContext"
+        p:keyManagers-ref="keyManagerTomcatServer"
+        p:parameters-ref="sslParamsClientTomcatClient"
+        p:trustManagers-ref="trustManagerTomcatServer"/>
+    
+    <!--====================================================================================================
+    = REST TEMPLATES
+    =====================================================================================================-->
+    <beans:bean id="restTemplateTomcatClient" parent="restTemplate">
+        <beans:constructor-arg name="reqFactory">
+            <beans:bean parent="httpClientReqFactory"
+                c:reqTaskExecService-ref="taskExecServiceTomcatClientReq"
+                c:sslContext-ref="sslContextTomcatClient"/>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = EMBEDDED SERVLET CONTAINER FACTORIES
+    =====================================================================================================-->
+    <!--suppress ELValidationInJSP SpringElInspection -->
+    <beans:bean id="embeddedServletContainerFactoryTomcatServer" class="com.esacinc.commons.web.tomcat.impl.EsacTomcatEmbeddedServletContainerFactory"
+        lazy-init="true"
+        p:baseDirectory="#{ app.homeDirectory }"
+        p:connectionEndpointName="#{ threadGroup.name }-tomcat-server-https"
+        p:connectionKeepAliveTimeout="${esac-commons.tomcat.server.conn.keep.alive.timeout}"
+        p:connectionTimeout="${esac-commons.tomcat.server.conn.timeout}"
+        p:contextPath="${esac-commons.tomcat.server.context.path}"
+        p:documentRoot="${esac-commons.app.webapp.dir}"
+        p:maxConnections="${esac-commons.tomcat.server.conn.max}"
+        p:maxConnectionThreads="${esac-commons.tomcat.server.conn.thread.max}"
+        p:minConnectionThreads="${esac-commons.tomcat.server.conn.thread.min}"
+        p:port="${esac-commons.tomcat.server.port.https}"
+        p:txIdGenerator-ref="txIdGenHttpServer"
+        p:uriEncoding="#{ T(com.esacinc.commons.io.EsacCharsets).UTF_8_NAME }"
+        p:workDirectory="${esac-commons.tomcat.server.work.dir}">
+        <beans:property name="contextLifecycleListeners">
+            <beans:list>
+                <beans:bean class="org.apache.catalina.core.JreMemoryLeakPreventionListener"/>
+                <beans:bean class="org.apache.catalina.core.ThreadLocalLeakPreventionListener"/>
+            </beans:list>
+        </beans:property>
+        <beans:property name="loginConfig">
+            <beans:bean class="org.apache.tomcat.util.descriptor.web.LoginConfig"
+                p:authMethod="CLIENT-CERT"
+                p:realmName="${esac-commons.tomcat.server.realm.sec.name}"/>
+        </beans:property>
+        <beans:property name="sessionConfig">
+            <beans:bean class="com.esacinc.commons.web.tomcat.impl.EsacSessionConfig"
+                p:httpOnly="true"
+                p:maxAge="${esac-commons.tomcat.server.session.cookie.age.max}"
+                p:secure="true">
+                <beans:property name="trackingModes">
+                    <beans:set>
+                        <beans:value>SSL</beans:value>
+                    </beans:set>
+                </beans:property>
+            </beans:bean>
+        </beans:property>
+        <beans:property name="sslImplementation">
+            <beans:bean class="com.esacinc.commons.web.tomcat.crypto.impl.EsacJsseImplementation"
+                p:context-ref="sslContextTomcatServer"
+                p:parameters-ref="sslParamsServerTomcatServer">
+                <beans:property name="keyManagers">
+                    <beans:array>
+                        <beans:ref bean="keyManagerTomcatServer"/>
+                    </beans:array>
+                </beans:property>
+                <beans:property name="trustManagers">
+                    <beans:array>
+                        <beans:ref bean="trustManagerTomcatServer"/>
+                    </beans:array>
+                </beans:property>
+            </beans:bean>
+        </beans:property>
+        <beans:property name="valves">
+            <beans:list>
+                <beans:bean class="com.esacinc.commons.web.tomcat.logging.impl.LoggingValve"/>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+</beans:beans>

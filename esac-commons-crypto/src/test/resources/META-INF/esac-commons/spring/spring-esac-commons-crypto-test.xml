@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = BEAN POST PROCESSORS
+    =====================================================================================================-->
+    <beans:bean id="beanPostProcKeyStoreLoad" class="com.esacinc.commons.crypto.store.impl.LoadKeyStoreBeanPostProcessor"/>
+    
+    <beans:bean id="beanPostProcKeyStoreGen" class="com.esacinc.commons.test.crypto.store.impl.GeneratedKeyStoreBeanPostProcessor"/>
+    
+    <!--====================================================================================================
+    = SECURE RANDOM FACTORIES
+    =====================================================================================================-->
+    <beans:bean id="factorySecureRandom" class="com.esacinc.commons.crypto.random.impl.SecureRandomFactoryImpl"/>
+    
+    <!--====================================================================================================
+    = SECURE RANDOMS
+    =====================================================================================================-->
+    <beans:bean id="secureRandomSha1" factory-bean="factorySecureRandom" factory-method="build" lazy-init="true" scope="prototype">
+        <beans:constructor-arg name="config">
+            <beans:bean class="com.esacinc.commons.crypto.random.impl.SecureRandomConfigImpl"
+                c:algName="#{ T(com.esacinc.commons.crypto.random.SecureRandomAlgorithms).SHA1PRNG_NAME }"
+                c:prov="#{ T(com.esacinc.commons.crypto.CryptoProviders).SUN }"/>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = KEY FACTORIES
+    =====================================================================================================-->
+    <beans:bean id="factoryKeyPair" class="com.esacinc.commons.crypto.key.impl.KeyPairFactoryImpl"/>
+    
+    <!--====================================================================================================
+    = KEY PAIR CONFIGS
+    =====================================================================================================-->
+    <beans:bean id="configKeyPair" class="com.esacinc.commons.crypto.key.impl.KeyPairConfigImpl" abstract="true">
+        <beans:constructor-arg name="algId" value="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).RSA_ID }"/>
+        <beans:constructor-arg name="algName" value="#{ T(com.esacinc.commons.crypto.key.KeyAlgorithms).RSA_NAME }"/>
+        <beans:constructor-arg name="prov" value="#{ T(com.esacinc.commons.crypto.CryptoProviders).SUN_RSA_SIGN }"/>
+        <beans:constructor-arg name="secureRandom" ref="secureRandomSha1"/>
+        <beans:constructor-arg name="size" value="#{ (2 * T(com.esacinc.commons.utils.EsacDataUtils).BYTES_IN_KB) }"/>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = KEY PAIR INFOS
+    =====================================================================================================-->
+    <beans:bean id="infoKeyPair" class="com.esacinc.commons.crypto.key.impl.KeyPairInfoImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = DISTINGUISHED NAMES
+    =====================================================================================================-->
+    <beans:bean id="dn" class="com.esacinc.commons.crypto.naming.impl.DnImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = INTERVAL CONFIGS
+    =====================================================================================================-->
+    <beans:bean id="configInterval" class="com.esacinc.commons.crypto.time.impl.IntervalConfigImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = CERTIFICATE FACTORIES
+    =====================================================================================================-->
+    <beans:bean id="factoryCert" class="com.esacinc.commons.crypto.cert.impl.CertificateFactoryImpl"/>
+    
+    <!--====================================================================================================
+    = CERTIFICATE CONFIGS
+    =====================================================================================================-->
+    <beans:bean id="configCert" class="com.esacinc.commons.crypto.cert.impl.CertificateConfigImpl" abstract="true"
+        p:ocspResponderUris="${esac-commons.crypto.ocsp.url}"
+        p:signatureAlgorithmId="#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_512_WITH_RSA_ENCRYPTION_ID }"
+        p:signatureAlgorithmName="#{ T(com.esacinc.commons.crypto.sign.SignatureAlgorithms).SHA_512_WITH_RSA_ENCRYPTION_NAME }">
+        <beans:constructor-arg name="algId" value="#{ T(com.esacinc.commons.crypto.cert.CertificateAlgorithms).X509_ID }"/>
+        <beans:constructor-arg name="algName" value="#{ T(com.esacinc.commons.crypto.cert.CertificateAlgorithms).X509_NAME }"/>
+        <beans:constructor-arg name="prov" value="#{ T(com.esacinc.commons.crypto.CryptoProviders).SUN }"/>
+        <beans:constructor-arg name="secureRandom" ref="secureRandomSha1"/>
+        <beans:property name="interval">
+            <beans:bean parent="configInterval"
+                p:duration="#{ T(com.esacinc.commons.time.utils.EsacDateUtils).MS_IN_YEAR }"/>
+        </beans:property>
+        <beans:property name="keyUsages">
+            <beans:set>
+                <beans:value>DIGITAL_SIGNATURE</beans:value>
+            </beans:set>
+        </beans:property>
+    </beans:bean>
+    
+    <beans:bean id="configCertCa" parent="configCert" abstract="true"
+        p:certificateAuthority="true">
+        <beans:property name="extendedKeyUsages">
+            <beans:set>
+                <beans:value>OCSP_SIGNING</beans:value>
+            </beans:set>
+        </beans:property>
+        <beans:property name="keyUsages">
+            <beans:set merge="true">
+                <beans:value>KEY_CERT_SIGN</beans:value>
+            </beans:set>
+        </beans:property>
+    </beans:bean>
+    
+    <beans:bean id="configCertLeaf" parent="configCert" abstract="true">
+        <beans:property name="extendedKeyUsages">
+            <beans:set>
+                <beans:value>CLIENT_AUTH</beans:value>
+                <beans:value>SERVER_AUTH</beans:value>
+            </beans:set>
+        </beans:property>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = CERTIFICATE INFOS
+    =====================================================================================================-->
+    <beans:bean id="infoCert" class="com.esacinc.commons.crypto.cert.impl.CertificateInfoImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = CREDENTIAL CONFIGS
+    =====================================================================================================-->
+    <beans:bean id="configCred" class="com.esacinc.commons.crypto.credential.impl.CredentialConfigImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = CREDENTIAL INFOS
+    =====================================================================================================-->
+    <beans:bean id="infoCred" class="com.esacinc.commons.crypto.credential.impl.CredentialInfoImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = CREDENTIALS
+    =====================================================================================================-->
+    <beans:bean id="cred" class="com.esacinc.commons.crypto.credential.impl.CredentialImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = CREDENTIALS: CERTIFICATE AUTHORITIES
+    =====================================================================================================-->
+    <beans:bean id="credCa" parent="cred"
+        c:id="${esac-commons.crypto.cred.ca.subject.cn}"
+        c:name="${esac-commons.crypto.cred.ca.subject.cn}">
+        <beans:constructor-arg name="config">
+            <beans:bean parent="configCred">
+                <beans:constructor-arg name="certDescriptor">
+                    <beans:bean parent="configCertCa"
+                        p:selfIssued="true">
+                        <beans:property name="subjectDn">
+                            <beans:bean parent="dn"
+                                p:commonName="${esac-commons.crypto.cred.ca.subject.cn}"/>
+                        </beans:property>
+                    </beans:bean>
+                </beans:constructor-arg>
+                <beans:constructor-arg name="keyPairDescriptor">
+                    <beans:bean parent="configKeyPair"/>
+                </beans:constructor-arg>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <beans:bean id="credCaUntrusted" parent="cred"
+        c:id="${esac-commons.crypto.cred.ca.untrusted.subject.cn}"
+        c:name="${esac-commons.crypto.cred.ca.untrusted.subject.cn}">
+        <beans:constructor-arg name="config">
+            <beans:bean parent="configCred">
+                <beans:constructor-arg name="certDescriptor">
+                    <beans:bean parent="configCertCa"
+                        p:selfIssued="true">
+                        <beans:property name="subjectDn">
+                            <beans:bean parent="dn"
+                                p:commonName="${esac-commons.crypto.cred.ca.untrusted.subject.cn}"/>
+                        </beans:property>
+                    </beans:bean>
+                </beans:constructor-arg>
+                <beans:constructor-arg name="keyPairDescriptor">
+                    <beans:bean parent="configKeyPair"/>
+                </beans:constructor-arg>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = CREDENTIALS: LEAF
+    =====================================================================================================-->
+    <beans:bean id="credLeaf" parent="cred" abstract="true"
+        p:issuerCredential-ref="credCa"/>
+    
+    <beans:bean id="credLeafUntrusted" parent="credLeaf" abstract="true"
+        p:issuerCredential-ref="credCaUntrusted"/>
+    
+    <!--====================================================================================================
+    = KEY STORE ENTRY CONFIGS
+    =====================================================================================================-->
+    <beans:bean id="configKeyStoreEntryPrivateKey" class="com.esacinc.commons.crypto.store.impl.PrivateKeyKeyStoreEntryConfigImpl" abstract="true"/>
+    
+    <beans:bean id="configKeyStoreEntryTrustedCert" class="com.esacinc.commons.crypto.store.impl.TrustedCertificateKeyStoreEntryConfigImpl" abstract="true"/>
+    
+    <!--====================================================================================================
+    = KEY STORES SPIS
+    =====================================================================================================-->
+    <beans:bean id="keyStoreSpi" class="com.esacinc.commons.crypto.store.impl.EsacKeyStoreSpi" abstract="true">
+        <beans:constructor-arg name="algName" value="#{ T(com.esacinc.commons.crypto.store.KeyStoreAlgorithms).JKS_NAME }"/>
+        <beans:constructor-arg name="prov" value="#{ T(com.esacinc.commons.crypto.CryptoProviders).SUN }"/>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = KEY STORES
+    =====================================================================================================-->
+    <beans:bean id="keyStore" class="com.esacinc.commons.crypto.store.impl.EsacKeyStore" abstract="true"/>
+    
+    <!--====================================================================================================
+    = KEY STORES: CERTIFICATE AUTHORITY
+    =====================================================================================================-->
+    <beans:bean id="keyStoreCa" parent="keyStore">
+        <beans:constructor-arg name="spi">
+            <beans:bean parent="keyStoreSpi"
+                c:pass="${esac-commons.crypto.store.key.ca.pass}"
+                c:resource="${esac-commons.crypto.store.key.ca.file}">
+                <beans:property name="entryConfigs">
+                    <beans:array>
+                        <beans:bean parent="configKeyStoreEntryPrivateKey"
+                            c:alias="${esac-commons.crypto.store.key.ca.entry.ca.alias}"
+                            c:pass="${esac-commons.crypto.store.key.ca.entry.ca.pass}"
+                            p:credential-ref="credCa"/>
+                    </beans:array>
+                </beans:property>
+            </beans:bean>
+        </beans:constructor-arg>
+    </beans:bean>
+</beans:beans>

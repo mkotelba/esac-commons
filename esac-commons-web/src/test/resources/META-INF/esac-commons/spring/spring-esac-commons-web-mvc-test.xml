@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+    
+    <!--====================================================================================================
+    = MVC
+    =====================================================================================================-->
+    <mvc:annotation-driven conversion-service="conversionService">
+        <mvc:message-converters register-defaults="false">
+            <beans:bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter"
+                p:defaultCharset="#{ T(java.nio.charset.StandardCharsets).UTF_8 }"/>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    
+    <!--====================================================================================================
+    = INTERCEPTORS
+    =====================================================================================================-->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <beans:bean class="org.springframework.web.servlet.mvc.WebContentInterceptor"
+                p:cacheSeconds="0"
+                p:useCacheControlHeader="true"
+                p:useCacheControlNoStore="true"
+                p:useExpiresHeader="true"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+    
+    <!--====================================================================================================
+    = RESOURCE TRANSFORMERS
+    =====================================================================================================-->
+    <beans:bean id="resourceTransformerUriPatternMappingFavicon" class="com.esacinc.commons.web.servlet.resource.impl.UriPatternMappingResourceTransformer">
+        <beans:constructor-arg name="mappedUriPatternResources">
+            <beans:map>
+                <beans:entry key="\Q${esac-commons.static.images.favicon.file.url.path}\E$" value="classpath:${esac-commons.static.images.favicon.file}"/>
+            </beans:map>
+        </beans:constructor-arg>
+    </beans:bean>
+    
+    <!--====================================================================================================
+    = RESOURCES
+    =====================================================================================================-->
+    <!--suppress SpringModelInspection -->
+    <mvc:resources location="${esac-commons.static.images.favicon.file.url.path}" mapping="${esac-commons.static.images.favicon.file.url.path}"
+        order="#{ T(org.springframework.core.Ordered).HIGHEST_PRECEDENCE }">
+        <mvc:resource-chain resource-cache="true">
+            <mvc:transformers>
+                <beans:ref bean="resourceTransformerUriPatternMappingFavicon"/>
+            </mvc:transformers>
+        </mvc:resource-chain>
+    </mvc:resources>
+    
+    <mvc:resources location="classpath:${esac-commons.static.images.dir}/" mapping="${esac-commons.static.images.dir.url.path}/**"
+        order="#{ (T(org.springframework.core.Ordered).HIGHEST_PRECEDENCE + 1) }"/>
+    
+    <!--====================================================================================================
+    = SERVLET REGISTRATION BEANS
+    =====================================================================================================-->
+    <beans:bean id="regBeanServletDispatcher" parent="regBeanServlet"
+        p:loadOnStartup="1"
+        p:name="dispatcherServlet"
+        p:order="#{ T(org.springframework.core.Ordered).HIGHEST_PRECEDENCE }">
+        <beans:property name="servlet">
+            <beans:bean class="org.springframework.web.servlet.DispatcherServlet"/>
+        </beans:property>
+        <beans:property name="servletSecurity">
+            <beans:bean class="javax.servlet.ServletSecurityElement">
+                <beans:constructor-arg index="0" type="javax.servlet.HttpConstraintElement">
+                    <beans:bean class="javax.servlet.HttpConstraintElement">
+                        <beans:constructor-arg index="0" type="javax.servlet.annotation.ServletSecurity$TransportGuarantee" value="CONFIDENTIAL"/>
+                        <beans:constructor-arg index="1" type="java.lang.String[]">
+                            <beans:array>
+                                <beans:value>${esac-commons.tomcat.server.role.sec.name}</beans:value>
+                            </beans:array>
+                        </beans:constructor-arg>
+                    </beans:bean>
+                </beans:constructor-arg>
+            </beans:bean>
+        </beans:property>
+        <beans:property name="urlMappings">
+            <beans:list>
+                <beans:value>/</beans:value>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+</beans:beans>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:c="http://www.springframework.org/schema/c"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    
+    <!--====================================================================================================
+    = PROPERTY NAMING STRATEGIES
+    =====================================================================================================-->
+    <beans:bean id="propNamingStrategyElasticsearch" class="com.esacinc.commons.logging.elasticsearch.impl.ElasticsearchPropertyNamingStrategy"/>
+    
+    <!--====================================================================================================
+    = ELASTICSEARCH FIELD MAPPERS
+    =====================================================================================================-->
+    <beans:bean id="elasticsearchFieldMapperHttpParamMultimap"
+        class="com.esacinc.commons.net.http.logging.elasticsearch.impl.HttpParameterMultimapElasticsearchFieldMapper"/>
+    
+    <!--====================================================================================================
+    = ELASTICSEARCH MAPPING SERVICES
+    =====================================================================================================-->
+    <beans:bean id="elasticsearchMappingService" class="com.esacinc.commons.logging.elasticsearch.impl.ElasticsearchMappingServiceImpl">
+        <beans:constructor-arg name="objMapper">
+            <beans:bean parent="objMapper">
+                <beans:property name="config">
+                    <beans:bean parent="objMapperConfigLogging">
+                        <beans:property name="features">
+                            <beans:map merge="true">
+                                <beans:entry key="#{ T(com.fasterxml.jackson.databind.SerializationFeature).INDENT_OUTPUT }" value="true"/>
+                            </beans:map>
+                        </beans:property>
+                        <beans:property name="modules">
+                            <beans:array merge="true">
+                                <beans:bean parent="moduleLogging">
+                                    <beans:property name="serializers">
+                                        <beans:array merge="true">
+                                            <beans:bean class="com.esacinc.commons.logging.elasticsearch.impl.ElasticsearchIndexMappingJsonSerializer"/>
+                                        </beans:array>
+                                    </beans:property>
+                                </beans:bean>
+                            </beans:array>
+                        </beans:property>
+                    </beans:bean>
+                </beans:property>
+            </beans:bean>
+        </beans:constructor-arg>
+        <beans:property name="indexMapping">
+            <beans:bean class="com.esacinc.commons.logging.elasticsearch.impl.ElasticsearchIndexMappingImpl"
+                c:all="${esac-commons.logging.elasticsearch.mapping.index.all}"
+                c:dynamicType="${esac-commons.logging.elasticsearch.mapping.index.dynamic.type}"/>
+        </beans:property>
+    </beans:bean>
+</beans:beans>
